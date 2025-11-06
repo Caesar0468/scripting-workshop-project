@@ -5,9 +5,9 @@
 # Function to check if master password file exists
 check_master(){
 if [ ! -f master.pass ]; then
-    master_exists=1 
+    master_exists=0 
 else
-    master_exists=0
+    master_exists=1
 fi 
 }
 
@@ -21,6 +21,7 @@ if [ -z "$pw" ]; then
 fi
 read -s -p "Confirm your master password:" pw_confirm
 if [ "$pw" != "$pw_confirm" ]; then
+    echo ""
     echo "Passwords do not match. Please try again."
     return 1
 fi

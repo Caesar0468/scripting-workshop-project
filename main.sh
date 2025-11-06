@@ -6,9 +6,9 @@
 
 source ./functions.sh
 
+run(){
 master_exists=0
 entry=0
-run(){
 check_master
 if [ "$master_exists" -eq 1 ]; then
     vault_entry
