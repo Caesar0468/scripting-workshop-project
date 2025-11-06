@@ -58,3 +58,26 @@ unset pw master_password
 #Function to main menu
 main_menu(){}
 
+#Function to view stored passwords
+view_pass(){}
+
+#Function to Mangage Passwords Menu
+manage_pass_menu(){}
+
+#Function to Add Password Menu
+add_pass_menu(){}
+
+#Function to auto generate password
+auto_gen_pass(){}
+
+#Function to add new password manually
+add_pass(){}
+
+#Function to delete a password
+delete_pass(){}
+
+#Function to edit a password
+edit_pass(){}
+
+#Function to change master password
+change_master(){}

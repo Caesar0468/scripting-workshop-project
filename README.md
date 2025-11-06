@@ -27,8 +27,9 @@ Checks if master.pass exists (check_master())
 |            |                       |       |_ 3. Return to Menu -> main_menu()
 |            |                       |-- 2. Delete Password(delete_pass()) -> main_menu()
 |            |                       |__ 3. Edit Password(edit_pass()) -> main_menu()
+|            |                       |__ 4. Return to main menu
 |            |                   3. Change Master Password
-|            |                       |__ create_master() -> Start Program
+|            |                       |__ change_master() -> Start Program
 |            |                   4. Exit -> Return 0
 |            |
 |            |__ if not match -> exit
