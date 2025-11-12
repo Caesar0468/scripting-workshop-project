@@ -14,10 +14,10 @@ if [ "$master_exists" -eq 1 ]; then
     vault_entry
         if [ "$entry" -eq 1 ] ; then
                 main_menu
-                    if [ "$choice" -eq 1 ]; then
+                    if [ "$choice" -eq "View Passwords"]; then
                         view_pass
                         main_menu
-                    elif  [ "$choice" -eq 2 ]; then
+                    elif  [ "$choice" -eq "Manage Passwords" ]; then
                         manage_pass_menu
                             if [ "$man_choice" -eq 1 ]; then
                                 add_pass_menu
@@ -33,10 +33,10 @@ if [ "$master_exists" -eq 1 ]; then
                             elif [ "$man_choice" -eq 4 ]; then
                                 main_menu
                             fi
-                    elif [ "$choice" -eq 3 ]; then
+                    elif [ "$choice" -eq "Change Master Password" ]; then
                         change_master
                         run
-                    elif [ "$choice" -eq 4 ]; then
+                    elif [ "$choice" -eq "Exit" ]; then
                         return 0
                     fi
         else

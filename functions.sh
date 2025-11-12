@@ -28,8 +28,7 @@ fi
 
 openssl enc -aes-256-cbc -salt -pbkdf2 -md sha256 -iter 100000 -pass pass:"$pw" -out master.pass <<< "$pw"
 chmod 600 master.pass
-pw=null
-pw_confirm=null
+unset pw pw_confirm
 echo ""
 echo "Master password created successfully."
 }
@@ -81,4 +80,23 @@ delete_pass(){}
 edit_pass(){}
 
 #Function to change master password
-change_master(){}
+change_master(){
+    read -s -p "Change your master password:" pw
+echo ""
+if [ -z "$pw" ]; then
+    echo "Password cannot be empty. Please try again."
+    return 1
+fi
+read -s -p "Confirm your master password:" pw_confirm
+if [ "$pw" != "$pw_confirm" ]; then
+    echo ""
+    echo "Passwords do not match. Please try again."
+    return 1
+fi
+
+openssl enc -aes-256-cbc -salt -pbkdf2 -md sha256 -iter 100000 -pass pass:"$pw" -out master.pass <<< "$pw"
+chmod 600 master.pass
+unset pw pw_confirm
+echo ""
+echo "Master password changed successfully."
+}
