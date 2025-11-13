@@ -20,13 +20,14 @@ check_master(){
         return 1
     fi
     read -s -p "Confirm your master password:" pw_c_confirm
+    echo ""
     if [ "$pw_c" != "$pw_c_confirm" ]; then
         echo ""
         echo "Passwords do not match. Please try again."
         return 1
     fi
 
-    openssl passwd -6 $"pw_c" > master.pass
+    openssl passwd -6 -stdin <<< "$pw_c" > master.pass
     chmod 600 master.pass
     unset pw_c pw_c_confirm
     echo ""
@@ -44,57 +45,57 @@ vault_entry(){
     fi
     echo ""
     master_hash=$(cat master.pass)
-    salt =$(echo "master_hash" | awk -F'$' '{print $3}')
-    pw_v_hash=$(openssl passwd -6 -salt "$salt" $"$pw_v")
+    salt=$(echo "$master_hash" | awk -F'$' '{print $3}')
+    pw_v_hash=$(openssl passwd -6 -salt "$salt" "$pw_v")
 
-    if [ "$master_hash" == "$pw_v_hash" ]; then
+    if [ "$master_hash" = "$pw_v_hash" ]; then
         echo "Access Granted"
         entry=1
     else
         echo "Access Denied"
         entry=0
     fi
-    unset pw_v pw_v_hash master_hash
+    unset pw_v pw_v_hash master_hash salt
 }
 
 #Function to main menu
 main_menu(){
-    pass
+    :
 }
 
 #Function to view stored passwords
 view_pass(){
-    pass
+    :
 }
 
 #Function to Mangage Passwords Menu
 manage_pass_menu(){
-    pass
+    :
 }
 
 #Function to Add Password Menu
 add_pass_menu(){
-    pass
+    :
 }
 
 #Function to auto generate password
 auto_gen_pass(){
-    pass
+    :
 }
 
 #Function to add new password manually
 add_pass(){
-    pass
+    :
 }
 
 #Function to delete a password
 delete_pass(){
-    pass
+    :
 }
 
 #Function to edit a password
 edit_pass(){
-    pass
+    :
 }
 
 #Function to change master password
@@ -106,6 +107,7 @@ change_master(){
         return 1
     fi
     read -s -p "Confirm your master password:" pw_ch_confirm
+    echo ""
     if [ "$pw_ch" != "$pw_ch_confirm" ]; then
         echo ""
         echo "Passwords do not match. Please try again."
