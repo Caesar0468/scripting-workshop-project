@@ -1,0 +1,7 @@
+
+CREATE TABLE IF NOT EXISTS passwords (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    service TEXT NOT NULL,
+    username TEXT NOT NULL,
+    encpass TEXT NOT NULL
+);
