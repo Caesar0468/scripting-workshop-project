@@ -2,6 +2,15 @@
 
 source ./functions.sh
 
+# Ensure database folder exists
+mkdir -p DataBase
+
+# Auto-create vault if missing
+if [ ! -f DataBase/vault.db ]; then
+    echo "Initializing new vault..."
+    sqlite3 DataBase/vault.db < init.sql
+fi
+
 cat << "EOF"
  ____   __    ___  ___        _  _  __    __  __  __   ____ 
 (  _ \ /__\  / __)/ __)      ( \/ )/__\  (  )(  )(  ) (_  _)
