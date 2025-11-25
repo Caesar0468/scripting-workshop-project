@@ -18,163 +18,96 @@ Tech: openssl, base64, grep, sqlite3 (optional)
 
 -----------------------------------------------------------------
 
-A Simple & Secure Bash Password Manager
+A secure, lightweight, CLI-based password manager built entirely in Bash. It uses OpenSSL for military-grade encryption and SQLite for structured storage.
 
-PASS VAULT is a lightweight, fully CLI-based password manager built entirely in Bash, using:
-	•	AES-256-GCM encryption
-	•	PBKDF2-SHA256 key derivation
-	•	SQLite for storage
-	•	OpenSSL for crypto
+## 🚀 Features
 
-No plaintext is ever stored.
-Everything is encrypted before touching the database.
+  * **Secure Encryption:** Uses **AES-256-CBC** with **PBKDF2** (100,000 iterations) for key derivation.
+  * **Zero-Knowledge Storage:** Service names, usernames, and passwords are all encrypted before being stored in the database.
+  * **Auto-Initialization:** Automatically creates the necessary database structure on the first run.
+  * **Password Generation:** Includes a built-in tool to generate secure, 32-character random passwords.
+  * **Management Tools:** View, Add, Edit, and Delete credentials easily via a text-based menu.
+  * **Session Security:** Master password is stored as a hash (SHA-512) and sensitive variables are unset immediately after use.
 
-⸻
+## 🛠️ Prerequisites
 
-⭐ Why PASS VAULT?
+Ensure you have the following installed on your system (Linux/macOS):
 
-✔ No GUI required
-✔ Works on any Linux/macOS terminal
-✔ 100% offline — no server, no cloud
-✔ Readable, hackable Bash code
-✔ Strong modern cryptography
-✔ Beginner friendly
-✔ Tiny footprint (just a few KB)
+  * `bash` (4.0+)
+  * `openssl`
+  * `sqlite3`
 
-⸻
+## 📂 Project Structure
 
-🚀 Features (At a Glance)
-
-🔒 Strong encryption
-	•	AES-256-GCM
-	•	PBKDF2 with 100,000 iterations
-	•	Random salt for every entry
-	•	GCM authentication (detects tampering)
-
-🗄️ Encrypted SQLite vault
-	•	Stores only encrypted fields
-	•	Even stolen DB → still unreadable
-
-🔧 Vault functions
-	•	Add passwords
-	•	Auto-generate passwords
-	•	View decrypted passwords
-	•	Edit entries
-	•	Delete entries
-	•	Change master password
-
-🧼 Secure design
-	•	Master password hashed (SHA-512-crypt)
-	•	Decrypted data only in RAM
-	•	Variables unset after use
-	•	SQL injection prevented
-
-⸻
-
-📁 Project Structure
-
-pass-vault/
-│
-├── vault.sh          # Main program
-├── functions.sh      # All logic (encryption, menus, DB ops)
-├── init.sql          # Database schema
-├── README.md
-└── .gitignore
-
-Vault files created at runtime:
-
-DataBase/vault.db     # encrypted SQLite database
-master.pass           # hashed master password
-
-
-⸻
-
-🛠️ Requirements
-	•	Bash
-	•	OpenSSL
-	•	SQLite3
-
-Already installed on most Linux/macOS systems.
-
-⸻
-
-▶️ Getting Started
-
-1. Clone the repo
-```
-git clone https://github.com/yourusername/pass-vault.git
-cd pass-vault
-```
-2. Make scripts executable
-```
-chmod +x vault.sh functions.sh
-```
-3. Create database
-```
-mkdir -p DataBase
-sqlite3 DataBase/vault.db < init.sql
-```
-4. Run PASS VAULT
-```
-./vault.sh
+```text
+scripting-workshop-project/
+├── main.sh              # Entry point (Run this file)
+├── functions.sh         # Core logic (Encryption, DB ops, Menu)
+├── DataBase/            # Directory for database storage
+│   ├── init.sql         # SQL schema for table creation
+│   └── vault.db         # The encrypted SQLite database (Created on runtime)
+└── README.md            # Documentation
 ```
 
-⸻
+## 💻 Installation & Usage
 
-🔑 First Run
+1.  **Navigate to the project directory:**
 
-On the first run you’ll be asked to:
-	1.	Create a master password
-	2.	Confirm it
+    ```bash
+    cd scripting-workshop-project
+    ```
 
-This master password:
-	•	never stored in plaintext
-	•	hashed using SHA-512-crypt
-	•	used to derive your AES encryption key
+2.  **Make the scripts executable:**
 
-⸻
+    ```bash
+    chmod +x main.sh functions.sh
+    ```
 
-🧭 Main Menu Overview
+3.  **Run the Vault:**
 
-1) View Passwords
-2) Manage Passwords
-3) Change Master Password
-4) Exit
+    ```bash
+    ./main.sh
+    ```
 
-Manage Passwords → Add / Edit / Delete
+    *Note: On the first run, the script will automatically create the `DataBase` folder and initialize `vault.db`.*
 
-1) Add Password Manually
-2) Auto-generate Password
-3) Back
+## 🔐 Getting Started
 
+### 1\. Setup Master Password
 
-⸻
+Upon first launch, you will be prompted to create a **Master Password**.
 
-🔐 Auto-Generated Passwords
+  * This password is used to encrypt/decrypt your data.
+  * **Do not lose this password.** If lost, your data cannot be recovered.
 
-Uses:
+### 2\. Main Menu
 
-openssl rand -base64 32
+Once authenticated, you can access the following options:
 
-This gives a 256-bit secure random password.
-Perfect for accounts, tokens, API keys, etc.
+  * **1) View Passwords:** Decrypts and displays a table of all stored credentials.
+  * **2) Manage Passwords:**
+      * *Add Password:* Manually input Service, Username, and Password.
+      * *Auto-generate:* Create a secure entry automatically.
+      * *Delete:* Remove an entry by ID.
+      * *Edit:* Update an existing entry.
+  * **3) Change Master Password:** Update your master encryption key.
+  * **4) Exit:** Clears secrets from memory and closes the application.
 
-⸻
+## 🛡️ Security Details
 
-🧩 Security Notes (Important)
-	•	Vault DB contains only encrypted values
-	•	Master password is hashed, not stored
-	•	All decrypted data is held only in memory, never written to disk
-	•	SQL inserts are sanitized
-	•	GCM ensures encrypted fields cannot be tampered with
-	•	Losing master.pass or vault.db means losing access permanently
+  * **Encryption:** `openssl enc -aes-256-cbc`
+  * **Key Derivation:** `pbkdf2` with Salt and 100,000 iterations (prevents rainbow table attacks).
+  * **Hashing:** The master password is hashed using `openssl passwd -6` (SHA-512 crypt) for verification.
+  * **Memory Safety:** Critical variables (like the decrypted password) are `unset` in the code as soon as they are processed to prevent memory leakage.
 
-⸻
+## ⚠️ Important Backup Advice
 
-⚠️ Backup Reminder
+To backup your vault, you must save two files:
 
-Keep these two files safe:
-	•	master.pass
-	•	DataBase/vault.db
+1.  `DataBase/vault.db` (The database)
+2.  `master.pass` (The hashed verification file)
 
-Without both, decryption is impossible.
+**If you lose `master.pass`, the script will not recognize your password, and you will be unable to decrypt the database.**
+
+```
+```
