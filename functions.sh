@@ -163,6 +163,7 @@ delete_pass(){
 read -p "Enter ID to delete: " ID
     sqlite3 "$DB" "DELETE FROM passwords WHERE id=$ID;"
     echo "Deleted."
+    unset ID
 }
 
 #Function to edit a password
