@@ -10,3 +10,4 @@ DataBase/vault.db
 *.swp
 *.tmp
 *.bak
+.DS_Store
