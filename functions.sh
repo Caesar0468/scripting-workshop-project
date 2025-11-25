@@ -1,12 +1,11 @@
-# functions are defined in this file
-
 #!/bin/bash
 
+# functions are defined in this file
 # Function to check if master password file exists
-
-DB="DataBase/vault.db"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DB="$SCRIPT_DIR/DataBase/vault.db"
 check_master(){
-    if [ ! -f master.pass ]; then
+    if [ ! -f "$SCRIPT_DIR/master.pass" ]; then
         master_exists=0
     else
         master_exists=1
@@ -29,8 +28,8 @@ check_master(){
         return 1
     fi
 
-    openssl passwd -6 -stdin <<< "$pw_c" > master.pass
-    chmod 600 master.pass
+    openssl passwd -6 -stdin <<< "$pw_c" > "$SCRIPT_DIR/master.pass"
+    chmod 600 "$SCRIPT_DIR/master.pass"
     unset pw_c pw_c_confirm
     echo ""
     echo "Master password created successfully."
@@ -38,12 +37,12 @@ check_master(){
 
 encrypt() {
     printf "%s" "$1" | \
-    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW" | base64
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass fd:3 3<<<"$MASTERPW" | base64 -w 0
 }
 
 decrypt() {
     printf "%s" "$1" | base64 -d | \
-    openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW"
+    openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass fd:3 3<<<"$MASTERPW"
 }
 
 # Function to enter the vault
@@ -57,7 +56,7 @@ vault_entry(){
         return 1
     fi
     echo ""
-    master_hash=$(cat master.pass)
+    master_hash=$(cat "$SCRIPT_DIR/master.pass")
     salt=$(echo "$master_hash" | awk -F'$' '{print $3}')
     pw_v_hash=$(openssl passwd -6 -salt "$salt" "$pw_v")
 
@@ -126,7 +125,7 @@ echo ""
 auto_gen_pass(){
     read -p "Service: " SERVICE
     read -p "Username: " USER
-    PASS=$(openssl rand -base64 12)
+    PASS=$(openssl rand -base64 32)
     echo "Generated Password: $PASS"
     echo ""
     
@@ -208,8 +207,8 @@ change_master(){
         return 1
     fi
 
-    openssl passwd -6 -stdin <<< "$pw_ch" > master.pass
-    chmod 600 master.pass
+    openssl passwd -6 -stdin <<< "$pw_ch" > "$SCRIPT_DIR/master.pass"
+    chmod 600 "$SCRIPT_DIR/master.pass"
     unset pw_ch pw_ch_confirm
     echo ""
     echo "Master password changed successfully."

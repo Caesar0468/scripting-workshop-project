@@ -11,7 +11,19 @@ mkdir -p "$SCRIPT_DIR/DataBase"
 if [ ! -f "$SCRIPT_DIR/DataBase/vault.db" ]; then
     echo "Initializing new vault..."
     sqlite3 "$SCRIPT_DIR/DataBase/vault.db" < "$SCRIPT_DIR/DataBase/init.sql"
+    chmod 600 "$SCRIPT_DIR/DataBase/vault.db"
 fi
+
+# cleanup function to wipe secrets
+cleanup() {
+    unset MASTERPW
+    echo -e "\nVault locked. Exiting."
+    exit
+}
+
+
+# Run cleanup on SIGINT (Ctrl+C) and SIGTERM
+trap cleanup SIGINT SIGTERM
 
 cat << "EOF"
  ____   __    ___  ___        _  _  __    __  __  __   ____ 
