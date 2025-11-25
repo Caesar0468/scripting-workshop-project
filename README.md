@@ -101,23 +101,23 @@ Already installed on most Linux/macOS systems.
 ▶️ Getting Started
 
 1. Clone the repo
-
+```
 git clone https://github.com/yourusername/pass-vault.git
 cd pass-vault
-
+```
 2. Make scripts executable
-
+```
 chmod +x vault.sh functions.sh
-
+```
 3. Create database
-
+```
 mkdir -p DataBase
 sqlite3 DataBase/vault.db < init.sql
-
+```
 4. Run PASS VAULT
-
+```
 ./vault.sh
-
+```
 
 ⸻
 
