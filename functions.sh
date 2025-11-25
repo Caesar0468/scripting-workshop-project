@@ -38,12 +38,12 @@ check_master(){
 
 encrypt() {
     printf "%s" "$1" | \
-    openssl enc -aes-256-gcm -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW" | base64
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW" | base64
 }
 
 decrypt() {
     printf "%s" "$1" | base64 -d | \
-    openssl enc -d -aes-256-gcm -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW"
+    openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW"
 }
 
 # Function to enter the vault
@@ -63,6 +63,7 @@ vault_entry(){
 
     if [ "$master_hash" = "$pw_v_hash" ]; then
         echo "Access Granted"
+        MASTERPW="$pw_v"
         entry=1
     else
         echo "Access Denied"
@@ -91,12 +92,14 @@ view_pass() {
     echo "--------------------------------------------------------------------------"
 
     while IFS='|' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
+         [ -z "$ENC_SERVICE" ] && continue 
         SERVICE=$(decrypt "$ENC_SERVICE")
         USER=$(decrypt "$ENC_USER")
         PASS=$(decrypt "$ENC_PASS")
 
         printf "%-5s | %-20s | %-20s | %s\n" "$ID" "$SERVICE" "$USER" "$PASS"
     done <<< "$rows"
+    unset ID ENC_SERVICE ENC_USER ENC_PASS rows
 }
 
 #Function to Mangage Passwords Menu
@@ -205,7 +208,7 @@ change_master(){
         return 1
     fi
 
-    openssl passwd -6 <<< "$pw_ch" > master.pass
+    openssl passwd -6 -stdin <<< "$pw_ch" > master.pass
     chmod 600 master.pass
     unset pw_ch pw_ch_confirm
     echo ""

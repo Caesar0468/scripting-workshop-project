@@ -68,6 +68,7 @@ run() {
                 ;;
             4)
                 echo "Goodbye!"
+                unset MASTERPW
                 exit 0
                 ;;
             *)
