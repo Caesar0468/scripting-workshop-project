@@ -37,12 +37,12 @@ check_master(){
 
 encrypt() {
     printf "%s" "$1" | \
-    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass fd:3 3<<<"$MASTERPW" | base64 -w 0
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 -md sha256 -pass fd:3 3<<<"$MASTERPW" | base64 -w 0
 }
 
 decrypt() {
     printf "%s" "$1" | base64 -d | \
-    openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 100000 -md sha256 -pass fd:3 3<<<"$MASTERPW"
+    openssl enc -d -aes-256-cbc -salt -pbkdf2 -iter 600000 -md sha256 -pass fd:3 3<<<"$MASTERPW" 2>/dev/null
 }
 
 # Function to enter the vault
@@ -58,7 +58,7 @@ vault_entry(){
     echo ""
     master_hash=$(cat "$SCRIPT_DIR/master.pass")
     salt=$(echo "$master_hash" | awk -F'$' '{print $3}')
-    pw_v_hash=$(openssl passwd -6 -salt "$salt" "$pw_v")
+    pw_v_hash=$(openssl passwd -6 -salt "$salt" -stdin <<< "$pw_v")
 
     if [ "$master_hash" = "$pw_v_hash" ]; then
         echo "Access Granted"
@@ -85,12 +85,12 @@ main_menu() {
 
 #Function to view stored passwords
 view_pass() {
-    rows=$(sqlite3 -separator '|' "$DB" "SELECT id, service, username, encpass FROM passwords;")
+    rows=$(sqlite3 -separator $'\x1f' "$DB" "SELECT id, service, username, encpass FROM passwords;")
 
     printf "\n%-5s | %-20s | %-20s | %s\n" "ID" "SERVICE" "USERNAME" "PASSWORD"
     echo "--------------------------------------------------------------------------"
 
-    while IFS='|' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
+    while IFS=$'\x1f' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
          [ -z "$ENC_SERVICE" ] && continue 
         SERVICE=$(decrypt "$ENC_SERVICE")
         USER=$(decrypt "$ENC_USER")
