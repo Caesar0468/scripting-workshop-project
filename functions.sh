@@ -36,6 +36,16 @@ check_master(){
     echo "Master password created successfully."
 }
 
+encrypt() {
+    printf "%s" "$1" | \
+    openssl enc -aes-256-gcm -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW" | base64
+}
+
+decrypt() {
+    printf "%s" "$1" | base64 -d | \
+    openssl enc -d -aes-256-gcm -salt -pbkdf2 -iter 100000 -md sha256 -pass pass:"$MASTERPW"
+}
+
 # Function to enter the vault
 vault_entry(){
 
@@ -74,9 +84,19 @@ main_menu() {
 }
 
 #Function to view stored passwords
-view_pass(){
- sqlite3 -header -column "$DB" \
-    "SELECT id, service, username, encpass FROM passwords;"
+view_pass() {
+    rows=$(sqlite3 -separator '|' "$DB" "SELECT id, service, username, encpass FROM passwords;")
+
+    printf "\n%-5s | %-20s | %-20s | %s\n" "ID" "SERVICE" "USERNAME" "PASSWORD"
+    echo "--------------------------------------------------------------------------"
+
+    while IFS='|' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
+        SERVICE=$(decrypt "$ENC_SERVICE")
+        USER=$(decrypt "$ENC_USER")
+        PASS=$(decrypt "$ENC_PASS")
+
+        printf "%-5s | %-20s | %-20s | %s\n" "$ID" "$SERVICE" "$USER" "$PASS"
+    done <<< "$rows"
 }
 
 #Function to Mangage Passwords Menu
@@ -101,7 +121,22 @@ echo ""
 
 #Function to auto generate password
 auto_gen_pass(){
-    :
+    read -p "Service: " SERVICE
+    read -p "Username: " USER
+    PASS=$(openssl rand -base64 12)
+    echo "Generated Password: $PASS"
+    echo ""
+    
+    ENC_SERVICE=$(encrypt "$SERVICE")
+    ENC_USER=$(encrypt "$USER")
+    ENC_PASS=$(encrypt "$PASS")
+
+    sqlite3 "$DB" \
+    "INSERT INTO passwords (service, username, encpass)
+     VALUES ('$ENC_SERVICE', '$ENC_USER', '$ENC_PASS');"
+
+    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS
+    echo "Password saved."
 }
 
 #Function to add new password manually
@@ -111,10 +146,15 @@ add_pass(){
     read -sp "Password: " PASS
     echo ""
 
+    ENC_SERVICE=$(encrypt "$SERVICE")
+    ENC_USER=$(encrypt "$USER")
+    ENC_PASS=$(encrypt "$PASS")
+
     sqlite3 "$DB" \
     "INSERT INTO passwords (service, username, encpass)
-     VALUES ('$SERVICE', '$USER', '$PASS');"
+     VALUES ('$ENC_SERVICE', '$ENC_USER', '$ENC_PASS');"
 
+    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS
     echo "Password saved."
 }
 
@@ -134,12 +174,18 @@ edit_pass() {
     read -sp "New Password: " PASS
     echo ""
 
+    ENC_SERVICE=$(encrypt "$SERVICE")
+    ENC_USER=$(encrypt "$USER")
+    ENC_PASS=$(encrypt "$PASS")
+
     sqlite3 "$DB" \
     "UPDATE passwords
-     SET service='$SERVICE', username='$USER', encpass='$PASS'
+     SET service='$ENC_SERVICE', username='$ENC_USER', encpass='$ENC_PASS'
      WHERE id=$ID;"
 
     echo "Updated."
+
+    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ID
 }
 
 #Function to change master password

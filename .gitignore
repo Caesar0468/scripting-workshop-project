@@ -1,0 +1,12 @@
+# sensitive files
+master.pass
+DataBase/vault.db
+
+# recordings
+*.gif
+*.cast
+
+# temp
+*.swp
+*.tmp
+*.bak
