@@ -6,8 +6,6 @@ __________  _____    _________ _________   ____   _________   ____ ___.____  ___
  |____|  \____|__  /_______  /_______  /      \___/\____|__  /______/ |_______ \____|   
                  \/        \/        \/                    \/                 \/        
 ```
-----------------Password Manager with Encryption-----------------
-
 Objective: A CLI-based password vault with secure storage.
 
     Features:
