@@ -1,14 +1,16 @@
 #!/bin/bash
 
-source ./functions.sh
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+source "$SCRIPT_DIR/functions.sh"
 
 # Ensure database folder exists
-mkdir -p DataBase
+mkdir -p "$SCRIPT_DIR/DataBase"
 
 # Auto-create vault if missing
-if [ ! -f DataBase/vault.db ]; then
+if [ ! -f "$SCRIPT_DIR/DataBase/vault.db" ]; then
     echo "Initializing new vault..."
-    sqlite3 DataBase/vault.db < init.sql
+    sqlite3 "$SCRIPT_DIR/DataBase/vault.db" < "$SCRIPT_DIR/DataBase/init.sql"
 fi
 
 cat << "EOF"
