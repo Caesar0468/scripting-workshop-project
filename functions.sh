@@ -29,6 +29,7 @@ change_master(){
 
     openssl passwd -6 -stdin <<< "$pw_ch" > "$SCRIPT_DIR/master.pass"
     chmod 600 "$SCRIPT_DIR/master.pass"
+    MASTERPW="$pw_ch"
     unset pw_ch pw_ch_confirm
     echo ""
     echo "Master password changed successfully."
