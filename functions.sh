@@ -1,9 +1,24 @@
 #!/bin/bash
 
-# functions are defined in this file
-# Function to check if master password file exists
+# --- CONFIGURATION ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DB="$SCRIPT_DIR/DataBase/vault.db"
+# Define the log file location
+LOG_FILE="$SCRIPT_DIR/vault_audit.log"
+
+# --- LOGGING FUNCTION (NEW) ---
+# Usage: log_activity "ACTION_TYPE" "Details about the action"
+log_activity() {
+    local action="$1"
+    local details="$2"
+    local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
+
+    # Append the entry to the log file
+    echo "[$timestamp] [$action] $details" >> "$LOG_FILE"
+
+    # secure the log file permissions (only owner can read/write)
+    chmod 600 "$LOG_FILE" 2>/dev/null
+}
 
 is_valid_id() {
   [[ $1 =~ ^[0-9]+$ ]]
@@ -39,6 +54,10 @@ check_master(){
     openssl passwd -6 -stdin <<< "$pw_c" > "$SCRIPT_DIR/master.pass"
     chmod 600 "$SCRIPT_DIR/master.pass"
     MASTERPW="$pw_ch"
+
+    # LOGGING
+    log_activity "SYSTEM" "New Master Password created"
+
     unset pw_c pw_c_confirm
     echo ""
     echo "Master password created successfully."
@@ -73,9 +92,13 @@ vault_entry(){
         echo "Access Granted"
         MASTERPW="$pw_v"
         entry=1
+        # LOGGING SUCCESS
+        log_activity "LOGIN_SUCCESS" "User unlocked the vault"
     else
         echo "Access Denied"
         entry=0
+        # LOGGING FAILURE (Security Critical)
+        log_activity "LOGIN_FAIL" "Failed attempt to unlock vault"
     fi
     unset pw_v pw_v_hash master_hash salt
 }
@@ -106,6 +129,10 @@ view_pass() {
 
         printf "%-5s | %-20s | %-20s | %s\n" "$ID" "$SERVICE" "$USER" "$PASS"
     done <<< "$rows"
+
+    # LOGGING
+    log_activity "VIEW" "User viewed/decrypted all passwords"
+
     unset ID ENC_SERVICE ENC_USER ENC_PASS rows
 }
 
@@ -154,6 +181,9 @@ VALUES (
     '$(printf "%s" "$ENC_PASS_ESC")'
 );
 EOF
+    # LOGGING (Note: We log the SERVICE, but never the PASSWORD)
+    log_activity "ADD" "Auto-generated password added for service: $SERVICE"
+
 unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
     echo "Password saved."
 }
@@ -181,6 +211,9 @@ VALUES (
 );
 EOF
 
+    # LOGGING
+    log_activity "ADD" "Manual password added for service: $SERVICE"
+
 unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
     echo "Password saved."
 }
@@ -197,6 +230,9 @@ read -p "Enter ID to delete: " ID
     sqlite3 "$DB" <<EOF
 DELETE FROM passwords WHERE id = $ID;
 EOF
+
+    # LOGGING
+    log_activity "DELETE" "Deleted password entry ID: $ID"
 
     unset ID
     echo "Deleted."
@@ -233,8 +269,9 @@ SET service = '$(printf "%s" "$ENC_SERVICE_ESC")',
 WHERE id = $ID;
 EOF
 
+    # LOGGING
+    log_activity "EDIT" "Edited password entry ID: $ID for service: $SERVICE"
+
     unset ENC_SERVICE ENC_USER ENC_PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC SERVICE USER PASS ID
     echo "Updated."
 }
-
-
