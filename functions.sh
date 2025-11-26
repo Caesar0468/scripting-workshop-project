@@ -216,23 +216,36 @@ read -p "Enter ID to delete: " ID
         return 1
     fi
 
+exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
+    if [ "$exists" -eq 0 ]; then
+        echo "Error: ID $ID not found."
+        unset ID exists
+        return 1
+    fi
+
     sqlite3 "$DB" <<EOF
 DELETE FROM passwords WHERE id = $ID;
 EOF
 
     log_activity "DELETE" "Deleted password"
 
-    unset ID
+    unset ID exists
     echo "Deleted."
   }
 
 #Function to edit a password
-
 edit_pass() {
  read -p "Enter ID to edit: " ID
     if ! is_valid_id "$ID"; then
         echo "Invalid ID. Must be a non-negative integer."
         unset ID
+        return 1
+    fi
+
+exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
+    if [ "$exists" -eq 0 ]; then
+        echo "Error: ID $ID not found."
+        unset ID exists
         return 1
     fi
 
@@ -259,6 +272,6 @@ EOF
 
     log_activity "EDIT" "Edited password"
 
-    unset ENC_SERVICE ENC_USER ENC_PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC SERVICE USER PASS ID
+    unset ENC_SERVICE ENC_USER ENC_PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC SERVICE USER PASS ID exists
     echo "Updated."
 }
