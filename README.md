@@ -51,6 +51,12 @@ scripting-workshop-project/
 
 ## 💻 Installation & Usage
 
+1.  **Clone the project directory:**
+
+    ```bash
+    git clone https://github.com/Caesar0468/scripting-workshop-projecthttps://github.com/Caesar0468/scripting-workshop-project
+    ```
+
 1.  **Navigate to the project directory:**
 
     ```bash
