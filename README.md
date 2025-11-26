@@ -10,7 +10,7 @@
 (  _ \ /__\  / __)/ __)      ( \/ )/__\  (  )(  )(  ) (_  _)
  )___//(__)\ \__ \\__ \       \  //(__)\  )(__)(  )(__  )(  
 (__) (__)(__)(___/(___/        \/(__)(__)(______)(____)(__) 
-````
+```
 
 **PassVault** is a secure, lightweight, CLI-based password manager built entirely in Bash. It leverages **OpenSSL** for military-grade encryption and **SQLite** for structured, queryable storage, ensuring your credentials remain private and secure.
 
