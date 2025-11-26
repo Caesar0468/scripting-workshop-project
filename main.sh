@@ -21,9 +21,7 @@ cleanup() {
     exit
 }
 
-
-# Run cleanup on SIGINT (Ctrl+C) and SIGTERM
-trap cleanup SIGINT SIGTERM
+trap cleanup EXIT
 
 cat << "EOF"
  ____   __    ___  ___        _  _  __    __  __  __   ____ 
