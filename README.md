@@ -15,6 +15,8 @@
 **PassVault** is a secure, lightweight, CLI-based password manager built entirely in Bash. It leverages **OpenSSL** for military-grade encryption and **SQLite** for structured, queryable storage, ensuring your credentials remain private and secure.
 
 -----
+<p align="center"> <img src="https://github.com/user-attachments/assets/c372c52d-7731-4251-8ad3-ae49e1019fab" alt="PassVault Demo" width="700"> </p>
+
 
 ## 🚀 Features
 
