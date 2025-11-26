@@ -39,6 +39,10 @@ run() {
     # If no master password, create one
     if [ "$master_exists" -eq 0 ]; then
         create_master
+        if [ $? -ne 0 ]; then
+            echo "Setup failed. Exiting."
+            exit 1
+        fi
     fi
 
     # Step 2: Authenticate user
