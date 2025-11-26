@@ -166,7 +166,7 @@ auto_gen_pass(){
     read -p "Service: " SERVICE
     read -p "Username: " USER
     PASS=$(openssl rand -base64 32)
-    echo -e "${GREEN}Generated Password${NC}"
+    echo -e "Generated Password: ${GREEN}$PASS${NC}"
     echo ""
 
     ENC_SERVICE=$(encrypt "$SERVICE")
@@ -189,7 +189,8 @@ EOF
 
     unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
     echo -e "${GREEN}Password saved successfully.${NC}"
-    sleep 1
+    echo ""
+    read -p "Press Enter to continue..." dummy
 }
 
 #Function to add new password manually
