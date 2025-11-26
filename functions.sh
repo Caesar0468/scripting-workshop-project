@@ -6,6 +6,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DB="$SCRIPT_DIR/DataBase/vault.db"
 LOG_FILE="$SCRIPT_DIR/vault_audit.log"
 
+# --- COLORS ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m' # No Color
+
 # --- LOGGING FUNCTION  ---
 log_activity() {
     local action="$1"
@@ -13,7 +20,6 @@ log_activity() {
     local timestamp=$(date "+%Y-%m-%d %H:%M:%S")
 
     echo "[$timestamp] [$action] $details" >> "$LOG_FILE"
-
     chmod 600 "$LOG_FILE" 2>/dev/null
 }
 
@@ -33,30 +39,30 @@ check_master(){
 }
 
 # Function to create a new master password
-    create_master(){
-    read -s -p "Create your master password:" pw_c
+create_master(){
+    echo -e "${BLUE}--- First Time Setup ---${NC}"
+    read -s -p "Create your master password: " pw_c
     echo ""
     if [ -z "$pw_c" ]; then
-        echo "Password cannot be empty. Please try again."
+        echo -e "${RED}Password cannot be empty.${NC}"
         return 1
     fi
-    read -s -p "Confirm your master password:" pw_c_confirm
+    read -s -p "Confirm your master password: " pw_c_confirm
     echo ""
     if [ "$pw_c" != "$pw_c_confirm" ]; then
-        echo ""
-        echo "Passwords do not match. Please try again."
+        echo -e "${RED}Passwords do not match.${NC}"
         return 1
     fi
 
+    echo -n "Encrypting Master Key..."
     openssl passwd -6 -stdin <<< "$pw_c" > "$SCRIPT_DIR/master.pass"
     chmod 600 "$SCRIPT_DIR/master.pass"
     MASTERPW="$pw_c"
+    sleep 1
+    echo -e "${GREEN} Done!${NC}"
 
     log_activity "SYSTEM" "New Master Password created"
-
     unset pw_c pw_c_confirm
-    echo ""
-    echo "Master password created successfully."
 }
 
 encrypt() {
@@ -70,26 +76,29 @@ decrypt() {
 }
 
 vault_entry(){
-
-  echo "Welcome to the Vault"
+    echo -e "${BLUE}Welcome to the Vault${NC}"
     echo ""
     read -s -p "Enter the master password: " pw_v
-    if [ -z "$pw_v" ]; then
-        echo "Password cannot be empty. Please try again."
-        return 1
-    fi
     echo ""
+    
+    if [ -z "$pw_v" ]; then
+         echo -e "${RED}Password cannot be empty.${NC}"
+         return 1
+    fi
+
+    echo -n "Verifying..."
     master_hash=$(cat "$SCRIPT_DIR/master.pass")
     salt=$(echo "$master_hash" | awk -F'$' '{print $3}')
     pw_v_hash=$(openssl passwd -6 -salt "$salt" -stdin <<< "$pw_v")
+    sleep 0.5
 
     if [ "$master_hash" = "$pw_v_hash" ]; then
-        echo "Access Granted"
+        echo -e "${GREEN} Access Granted!${NC}"
         MASTERPW="$pw_v"
         entry=1
         log_activity "LOGIN_SUCCESS" "User unlocked the vault"
     else
-        echo "Access Denied"
+        echo -e "${RED} Access Denied.${NC}"
         entry=0
         log_activity "LOGIN_FAIL" "Failed attempt to unlock vault"
     fi
@@ -97,13 +106,14 @@ vault_entry(){
 }
 
 #Function to main menu
-
 main_menu() {
+    clear # Clears screen for a clean look
     echo ""
-    echo "------ MAIN MENU ------"
+    echo -e "${BLUE}------ MAIN MENU ------${NC}"
     echo "1) View Passwords"
     echo "2) Manage Passwords"
     echo "3) Exit"
+    echo ""
     read -p "Choose an option: " choice
 }
 
@@ -111,7 +121,8 @@ main_menu() {
 view_pass() {
     rows=$(sqlite3 -separator $'\x1f' "$DB" "SELECT id, service, username, encpass FROM passwords;")
 
-    printf "\n%-5s | %-20s | %-20s | %s\n" "ID" "SERVICE" "USERNAME" "PASSWORD"
+    # Colored Header
+    printf "\n${CYAN}%-5s | %-20s | %-20s | %s${NC}\n" "ID" "SERVICE" "USERNAME" "PASSWORD"
     echo "--------------------------------------------------------------------------"
 
     while IFS=$'\x1f' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
@@ -124,14 +135,16 @@ view_pass() {
     done <<< "$rows"
 
     log_activity "VIEW" "User viewed/decrypted all passwords"
-
     unset ID ENC_SERVICE ENC_USER ENC_PASS rows
+    
+    echo ""
+    read -p "Press Enter to return..." dummy
 }
 
 #Function to Mangage Passwords Menu
 manage_pass_menu(){
- echo ""
-    echo "------ MANAGE PASSWORDS ------"
+    echo ""
+    echo -e "${BLUE}------ MANAGE PASSWORDS ------${NC}"
     echo "1) Add Password"
     echo "2) Delete Password"
     echo "3) Edit Password"
@@ -141,7 +154,7 @@ manage_pass_menu(){
 
 #Function to Add Password Menu
 add_pass_menu(){
-echo ""
+    echo ""
     echo "1) Add Password Manually"
     echo "2) Auto-generate Password"
     echo "3) Back"
@@ -153,7 +166,7 @@ auto_gen_pass(){
     read -p "Service: " SERVICE
     read -p "Username: " USER
     PASS=$(openssl rand -base64 32)
-    echo "Generated Password: $PASS"
+    echo -e "${GREEN}Generated Password${NC}"
     echo ""
 
     ENC_SERVICE=$(encrypt "$SERVICE")
@@ -165,7 +178,6 @@ auto_gen_pass(){
     ENC_PASS_ESC=$(sql_escape "$ENC_PASS")
 
     sqlite3 "$DB"<<EOF
-
    INSERT INTO passwords (service, username, encpass)
 VALUES (
     '$(printf "%s" "$ENC_SERVICE_ESC")',
@@ -175,13 +187,14 @@ VALUES (
 EOF
     log_activity "ADD" "Auto-generated password added for service"
 
-unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
-    echo "Password saved."
+    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
+    echo -e "${GREEN}Password saved successfully.${NC}"
+    sleep 1
 }
 
 #Function to add new password manually
 add_pass(){
- read -p "Service: " SERVICE
+    read -p "Service: " SERVICE
     read -p "Username: " USER
     read -sp "Password: " PASS
     echo ""
@@ -203,22 +216,23 @@ VALUES (
 EOF
     log_activity "ADD" "Manual password added for service"
 
-unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
-    echo "Password saved."
+    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
+    echo -e "${GREEN}Password saved successfully.${NC}"
+    sleep 1
 }
 
 #Function to delete a password
 delete_pass(){
-read -p "Enter ID to delete: " ID
+    read -p "Enter ID to delete: " ID
     if ! is_valid_id "$ID"; then
-        echo "Invalid ID. Must be a non-negative integer."
+        echo -e "${RED}Invalid ID. Must be a non-negative integer.${NC}"
         unset ID
         return 1
     fi
 
-exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
+    exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
     if [ "$exists" -eq 0 ]; then
-        echo "Error: ID $ID not found."
+        echo -e "${RED}Error: ID $ID not found.${NC}"
         unset ID exists
         return 1
     fi
@@ -230,21 +244,22 @@ EOF
     log_activity "DELETE" "Deleted password"
 
     unset ID exists
-    echo "Deleted."
-  }
+    echo -e "${GREEN}Deleted.${NC}"
+    sleep 1
+}
 
 #Function to edit a password
 edit_pass() {
- read -p "Enter ID to edit: " ID
+    read -p "Enter ID to edit: " ID
     if ! is_valid_id "$ID"; then
-        echo "Invalid ID. Must be a non-negative integer."
+        echo -e "${RED}Invalid ID. Must be a non-negative integer.${NC}"
         unset ID
         return 1
     fi
 
-exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
+    exists=$(sqlite3 "$DB" "SELECT COUNT(*) FROM passwords WHERE id=$ID;")
     if [ "$exists" -eq 0 ]; then
-        echo "Error: ID $ID not found."
+        echo -e "${RED}Error: ID $ID not found.${NC}"
         unset ID exists
         return 1
     fi
@@ -273,5 +288,6 @@ EOF
     log_activity "EDIT" "Edited password"
 
     unset ENC_SERVICE ENC_USER ENC_PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC SERVICE USER PASS ID exists
-    echo "Updated."
+    echo -e "${GREEN}Updated.${NC}"
+    sleep 1
 }
