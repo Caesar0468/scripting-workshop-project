@@ -1,7 +1,7 @@
 # sensitive files
 master.pass
 DataBase/vault.db
-
+vault_audit.log
 # recordings
 *.gif
 *.cast
