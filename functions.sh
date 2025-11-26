@@ -4,6 +4,36 @@
 # Function to check if master password file exists
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DB="$SCRIPT_DIR/DataBase/vault.db"
+
+is_valid_id() {
+  [[ $1 =~ ^[0-9]+$ ]]
+}
+sql_escape() {
+  printf "%s" "$1" | sed "s/'/''/g"
+}
+#Function to change master password
+change_master(){
+        read -s -p "Change your master password:" pw_ch
+    echo ""
+    if [ -z "$pw_ch" ]; then
+        echo "Password cannot be empty. Please try again."
+        return 1
+    fi
+    read -s -p "Confirm your master password:" pw_ch_confirm
+    echo ""
+    if [ "$pw_ch" != "$pw_ch_confirm" ]; then
+        echo ""
+        echo "Passwords do not match. Please try again."
+        return 1
+    fi
+
+    openssl passwd -6 -stdin <<< "$pw_ch" > "$SCRIPT_DIR/master.pass"
+    chmod 600 "$SCRIPT_DIR/master.pass"
+    unset pw_ch pw_ch_confirm
+    echo ""
+    echo "Master password changed successfully."
+}
+
 check_master(){
     if [ ! -f "$SCRIPT_DIR/master.pass" ]; then
         master_exists=0
@@ -91,7 +121,7 @@ view_pass() {
     echo "--------------------------------------------------------------------------"
 
     while IFS=$'\x1f' read -r ID ENC_SERVICE ENC_USER ENC_PASS; do
-         [ -z "$ENC_SERVICE" ] && continue 
+         [ -z "$ENC_SERVICE" ] && continue
         SERVICE=$(decrypt "$ENC_SERVICE")
         USER=$(decrypt "$ENC_USER")
         PASS=$(decrypt "$ENC_PASS")
@@ -128,16 +158,25 @@ auto_gen_pass(){
     PASS=$(openssl rand -base64 32)
     echo "Generated Password: $PASS"
     echo ""
-    
+
     ENC_SERVICE=$(encrypt "$SERVICE")
     ENC_USER=$(encrypt "$USER")
     ENC_PASS=$(encrypt "$PASS")
 
-    sqlite3 "$DB" \
-    "INSERT INTO passwords (service, username, encpass)
-     VALUES ('$ENC_SERVICE', '$ENC_USER', '$ENC_PASS');"
+    ENC_SERVICE_ESC=$(sql_escape "$ENC_SERVICE")
+    ENC_USER_ESC=$(sql_escape "$ENC_USER")
+    ENC_PASS_ESC=$(sql_escape "$ENC_PASS")
 
-    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS
+    sqlite3 "$DB"<<EOF
+
+   INSERT INTO passwords (service, username, encpass)
+VALUES (
+    '$(printf "%s" "$ENC_SERVICE_ESC")',
+    '$(printf "%s" "$ENC_USER_ESC")',
+    '$(printf "%s" "$ENC_PASS_ESC")'
+);
+EOF
+unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
     echo "Password saved."
 }
 
@@ -152,26 +191,49 @@ add_pass(){
     ENC_USER=$(encrypt "$USER")
     ENC_PASS=$(encrypt "$PASS")
 
-    sqlite3 "$DB" \
-    "INSERT INTO passwords (service, username, encpass)
-     VALUES ('$ENC_SERVICE', '$ENC_USER', '$ENC_PASS');"
+    ENC_SERVICE_ESC=$(sql_escape "$ENC_SERVICE")
+    ENC_USER_ESC=$(sql_escape "$ENC_USER")
+    ENC_PASS_ESC=$(sql_escape "$ENC_PASS")
+    sqlite3 "$DB" <<EOF
+    INSERT INTO passwords (service, username, encpass)
+VALUES (
+    '$(printf "%s" "$ENC_SERVICE_ESC")',
+    '$(printf "%s" "$ENC_USER_ESC")',
+    '$(printf "%s" "$ENC_PASS_ESC")'
+);
+EOF
 
-    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS
+unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC
     echo "Password saved."
 }
 
 #Function to delete a password
 delete_pass(){
 read -p "Enter ID to delete: " ID
-    sqlite3 "$DB" "DELETE FROM passwords WHERE id=$ID;"
-    echo "Deleted."
+    if ! is_valid_id "$ID"; then
+        echo "Invalid ID. Must be a non-negative integer."
+        unset ID
+        return 1
+    fi
+
+    sqlite3 "$DB" <<EOF
+DELETE FROM passwords WHERE id = $ID;
+EOF
+
     unset ID
-}
+    echo "Deleted."
+  }
 
 #Function to edit a password
 
 edit_pass() {
-    read -p "Enter ID to edit: " ID
+ read -p "Enter ID to edit: " ID
+    if ! is_valid_id "$ID"; then
+        echo "Invalid ID. Must be a non-negative integer."
+        unset ID
+        return 1
+    fi
+
     read -p "New Service: " SERVICE
     read -p "New Username: " USER
     read -sp "New Password: " PASS
@@ -181,35 +243,20 @@ edit_pass() {
     ENC_USER=$(encrypt "$USER")
     ENC_PASS=$(encrypt "$PASS")
 
-    sqlite3 "$DB" \
-    "UPDATE passwords
-     SET service='$ENC_SERVICE', username='$ENC_USER', encpass='$ENC_PASS'
-     WHERE id=$ID;"
+    ENC_SERVICE_ESC=$(sql_escape "$ENC_SERVICE")
+    ENC_USER_ESC=$(sql_escape "$ENC_USER")
+    ENC_PASS_ESC=$(sql_escape "$ENC_PASS")
 
+    sqlite3 "$DB" <<EOF
+UPDATE passwords
+SET service = '$(printf "%s" "$ENC_SERVICE_ESC")',
+    username = '$(printf "%s" "$ENC_USER_ESC")',
+    encpass = '$(printf "%s" "$ENC_PASS_ESC")'
+WHERE id = $ID;
+EOF
+
+    unset ENC_SERVICE ENC_USER ENC_PASS ENC_SERVICE_ESC ENC_USER_ESC ENC_PASS_ESC SERVICE USER PASS ID
     echo "Updated."
-
-    unset ENC_SERVICE ENC_USER ENC_PASS SERVICE USER PASS ID
 }
 
-#Function to change master password
-change_master(){
-        read -s -p "Change your master password:" pw_ch
-    echo ""
-    if [ -z "$pw_ch" ]; then
-        echo "Password cannot be empty. Please try again."
-        return 1
-    fi
-    read -s -p "Confirm your master password:" pw_ch_confirm
-    echo ""
-    if [ "$pw_ch" != "$pw_ch_confirm" ]; then
-        echo ""
-        echo "Passwords do not match. Please try again."
-        return 1
-    fi
 
-    openssl passwd -6 -stdin <<< "$pw_ch" > "$SCRIPT_DIR/master.pass"
-    chmod 600 "$SCRIPT_DIR/master.pass"
-    unset pw_ch pw_ch_confirm
-    echo ""
-    echo "Master password changed successfully."
-}
