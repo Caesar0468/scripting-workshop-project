@@ -1,4 +1,5 @@
 #!/bin/bash
+set -o pipefail
 
 # --- CONFIGURATION ---
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -60,7 +61,7 @@ check_master(){
 
 encrypt() {
     printf "%s" "$1" | \
-    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 -md sha256 -pass fd:3 3<<<"$MASTERPW" | base64 -w 0
+    openssl enc -aes-256-cbc -salt -pbkdf2 -iter 600000 -md sha256 -pass fd:3 3<<<"$MASTERPW" | base64 | tr -d '\n'
 }
 
 decrypt() {
