@@ -11,29 +11,6 @@ is_valid_id() {
 sql_escape() {
   printf "%s" "$1" | sed "s/'/''/g"
 }
-#Function to change master password
-change_master(){
-        read -s -p "Change your master password:" pw_ch
-    echo ""
-    if [ -z "$pw_ch" ]; then
-        echo "Password cannot be empty. Please try again."
-        return 1
-    fi
-    read -s -p "Confirm your master password:" pw_ch_confirm
-    echo ""
-    if [ "$pw_ch" != "$pw_ch_confirm" ]; then
-        echo ""
-        echo "Passwords do not match. Please try again."
-        return 1
-    fi
-
-    openssl passwd -6 -stdin <<< "$pw_ch" > "$SCRIPT_DIR/master.pass"
-    chmod 600 "$SCRIPT_DIR/master.pass"
-    MASTERPW="$pw_ch"
-    unset pw_ch pw_ch_confirm
-    echo ""
-    echo "Master password changed successfully."
-}
 
 check_master(){
     if [ ! -f "$SCRIPT_DIR/master.pass" ]; then
@@ -61,6 +38,7 @@ check_master(){
 
     openssl passwd -6 -stdin <<< "$pw_c" > "$SCRIPT_DIR/master.pass"
     chmod 600 "$SCRIPT_DIR/master.pass"
+    MASTERPW="$pw_ch"
     unset pw_c pw_c_confirm
     echo ""
     echo "Master password created successfully."
@@ -109,8 +87,7 @@ main_menu() {
     echo "------ MAIN MENU ------"
     echo "1) View Passwords"
     echo "2) Manage Passwords"
-    echo "3) Change Master Password"
-    echo "4) Exit"
+    echo "3) Exit"
     read -p "Choose an option: " choice
 }
 

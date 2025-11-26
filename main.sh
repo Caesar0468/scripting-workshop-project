@@ -76,9 +76,6 @@ run() {
                 esac
                 ;;
             3)
-                change_master
-                ;;
-            4)
                 echo "Goodbye!"
                 unset MASTERPW
                 exit 0
