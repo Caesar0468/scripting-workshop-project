@@ -1,11 +1,11 @@
-````markdown
+
 # 🔐 Bash Password Vault
 
 ![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Database-SQLite3-003B57?style=flat-square&logo=sqlite&logoColor=white)
 ![Security](https://img.shields.io/badge/Security-OpenSSL%20AES--256-red?style=flat-square&logo=openssl&logoColor=white)
 
-```text
+```
  ____   __    ___  ___        _  _  __    __  __  __   ____ 
 (  _ \ /__\  / __)/ __)      ( \/ )/__\  (  )(  )(  ) (_  _)
  )___//(__)\ \__ \\__ \       \  //(__)\  )(__)(  )(__  )(  
@@ -115,4 +115,4 @@ To backup your vault, you need to save the following files:
 -----
 
 ```
-```
+
