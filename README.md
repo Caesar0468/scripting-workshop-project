@@ -1,119 +1,118 @@
-```
-__________  _____    _________ _________   ____   _________   ____ ___.____  ___________
-\______   \/  _  \  /   _____//   _____/   \   \ /   /  _  \ |    |   \    | \__    ___/
- |     ___/  /_\  \ \_____  \ \_____  \     \   Y   /  /_\  \|    |   /    |   |    |   
- |    |  /    |    \/        \/        \     \     /    |    \    |  /|    |___|    |   
- |____|  \____|__  /_______  /_______  /      \___/\____|__  /______/ |_______ \____|   
-                 \/        \/        \/                    \/                 \/        
-```
-Objective: A CLI-based password vault with secure storage.
+````markdown
+# 🔐 Bash Password Vault
 
-    Features:
-    1. AES-256 encryption (openssl)
-    2. Password generation (random strings)
-    3. Search/edit/delete entries
-    4. Audit trail for access
+![Bash](https://img.shields.io/badge/Language-Bash-4EAA25?style=flat-square&logo=gnu-bash&logoColor=white)
+![SQLite](https://img.shields.io/badge/Database-SQLite3-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Security](https://img.shields.io/badge/Security-OpenSSL%20AES--256-red?style=flat-square&logo=openssl&logoColor=white)
 
-Tech: openssl, base64, grep, sqlite3 (optional)
+```text
+ ____   __    ___  ___        _  _  __    __  __  __   ____ 
+(  _ \ /__\  / __)/ __)      ( \/ )/__\  (  )(  )(  ) (_  _)
+ )___//(__)\ \__ \\__ \       \  //(__)\  )(__)(  )(__  )(  
+(__) (__)(__)(___/(___/        \/(__)(__)(______)(____)(__) 
+````
 
------------------------------------------------------------------
+**PassVault** is a secure, lightweight, CLI-based password manager built entirely in Bash. It leverages **OpenSSL** for military-grade encryption and **SQLite** for structured, queryable storage, ensuring your credentials remain private and secure.
 
-A secure, lightweight, CLI-based password manager built entirely in Bash. It uses OpenSSL for military-grade encryption and SQLite for structured storage.
+-----
 
 ## 🚀 Features
 
-  * **Secure Encryption:** Uses **AES-256-CBC** with **PBKDF2** (100,000 iterations) for key derivation.
-  * **Zero-Knowledge Storage:** Service names, usernames, and passwords are all encrypted before being stored in the database.
-  * **Auto-Initialization:** Automatically creates the necessary database structure on the first run.
-  * **Password Generation:** Includes a built-in tool to generate secure, 32-character random passwords.
-  * **Management Tools:** View, Add, Edit, and Delete credentials easily via a text-based menu.
-  * **Session Security:** Master password is stored as a hash (SHA-512) and sensitive variables are unset immediately after use.
+  * **🛡️ Strong Encryption:** Uses **AES-256-CBC** with **PBKDF2** (600,000 iterations) for robust key derivation.
+  * **👁️ Zero-Knowledge Storage:** Service names, usernames, and passwords are fully encrypted *before* they touch the database.
+  * **📝 Privacy-Preserving Audit Log:** Logs operational events (e.g., "Password Added", "Login Success") to `vault_audit.log` without exposing sensitive metadata like Service Names or IDs.
+  * **⚡ Auto-Initialization:** Detects first-run status and automatically sets up the database schema and master password.
+  * **🎲 Password Generator:** Built-in CSPRNG tool generates 32-character secure passwords.
+  * **🧹 Automatic Cleanup:** Traps system signals (SIGINT/SIGTERM) to securely unset variables and clear memory upon exit.
 
 ## 🛠️ Prerequisites
 
 Ensure you have the following installed on your system (Linux/macOS):
 
   * `bash` (4.0+)
-  * `openssl`
+  * `openssl` (1.1.1+)
   * `sqlite3`
 
 ## 📂 Project Structure
 
 ```text
 scripting-workshop-project/
-├── main.sh              # Entry point (Run this file)
-├── functions.sh         # Core logic (Encryption, DB ops, Menu)
-├── DataBase/            # Directory for database storage
+├── main.sh              # 🚀 Entry point (Run this file)
+├── functions.sh         # ⚙️ Core logic (Encryption, DB ops, Audit)
+├── DataBase/            # 🗄️ Storage directory
 │   ├── init.sql         # SQL schema for table creation
-│   └── vault.db         # The encrypted SQLite database (Created on runtime)
+│   └── vault.db         # Encrypted SQLite database (Generated on runtime)
+├── vault_audit.log      # 📝 Security log (Generated on runtime)
 └── README.md            # Documentation
 ```
 
 ## 💻 Installation & Usage
 
-1.  **Clone the project directory:**
+### 1\. Installation
 
-    ```bash
-    git clone https://github.com/Caesar0468/scripting-workshop-project
-    ```
+Clone the repository and set executable permissions:
 
-1.  **Navigate to the project directory:**
+```bash
+git clone [https://github.com/Caesar0468/scripting-workshop-project](https://github.com/Caesar0468/scripting-workshop-project)
+cd scripting-workshop-project
+chmod +x main.sh functions.sh
+```
 
-    ```bash
-    cd scripting-workshop-project
-    ```
+### 2\. First Run (Setup)
 
-2.  **Make the scripts executable:**
+Run the main script. On the first launch, you will be asked to create a **Master Password**.
 
-    ```bash
-    chmod +x main.sh functions.sh
-    ```
+```bash
+./main.sh
+```
 
-3.  **Run the Vault:**
+> **⚠️ Warning:** Do not lose your Master Password. Since the system uses PBKDF2 to derive the encryption key directly from your password, **there is no recovery mechanism** if you forget it.
 
-    ```bash
-    ./main.sh
-    ```
+### 3\. Main Menu
 
-    *Note: On the first run, the script will automatically create the `DataBase` folder and initialize `vault.db`.*
+Once authenticated, the vault offers the following operations:
 
-## 🔐 Getting Started
+1.  **View Passwords:** Decrypts and displays a formatted table of your stored credentials.
+2.  **Manage Passwords:**
+      * **Add Password:** Manual entry of Service, Username, and Password.
+      * **Auto-generate:** Creates a random 32-char password and saves it automatically.
+      * **Delete:** Remove an entry permanently by ID.
+      * **Edit:** Update an existing entry by ID.
+3.  **Exit:** Clears memory, unsets the master key, and closes the application.
 
-### 1\. Setup Master Password
+## 🛡️ Security Architecture
 
-Upon first launch, you will be prompted to create a **Master Password**.
+| Component | Implementation Details |
+| :--- | :--- |
+| **Encryption Algo** | `aes-256-cbc` |
+| **Key Derivation** | `PBKDF2` (Salted, SHA-256, **600,000 Iterations**) |
+| **Authentication** | SHA-512 Hash (`openssl passwd -6`) verification |
+| **Data Storage** | SQLite3 (All fields are Base64 encoded ciphertext) |
+| **File Permissions** | Logs and Password files are strictly `chmod 600` |
 
-  * This password is used to encrypt/decrypt your data.
-  * **Do not lose this password.** If lost, your data cannot be recovered.
+### Database Schema
 
-### 2\. Main Menu
+Even if the database file is stolen, the attacker will only see encrypted strings. The schema uses `TEXT` fields to store the Base64 ciphertext:
 
-Once authenticated, you can access the following options:
+```sql
+CREATE TABLE passwords (
+    id INTEGER PRIMARY KEY,
+    service TEXT, -- Encrypted
+    username TEXT, -- Encrypted
+    encpass TEXT -- Encrypted
+);
+```
 
-  * **1) View Passwords:** Decrypts and displays a table of all stored credentials.
-  * **2) Manage Passwords:**
-      * *Add Password:* Manually input Service, Username, and Password.
-      * *Auto-generate:* Create a secure entry automatically.
-      * *Delete:* Remove an entry by ID.
-      * *Edit:* Update an existing entry.
-  * **3) Change Master Password:** Update your master encryption key.
-  * **4) Exit:** Clears secrets from memory and closes the application.
+## ⚠️ Backup & Advice
 
-## 🛡️ Security Details
+To backup your vault, you need to save the following files:
 
-  * **Encryption:** `openssl enc -aes-256-cbc`
-  * **Key Derivation:** `pbkdf2` with Salt and 100,000 iterations (prevents rainbow table attacks).
-  * **Hashing:** The master password is hashed using `openssl passwd -6` (SHA-512 crypt) for verification.
-  * **Memory Safety:** Critical variables (like the decrypted password) are `unset` in the code as soon as they are processed to prevent memory leakage.
-
-## ⚠️ Important Backup Advice
-
-To backup your vault, you must save two files:
-
-1.  `DataBase/vault.db` (The database)
+1.  `DataBase/vault.db` (The encrypted data)
 2.  `master.pass` (The hashed verification file)
 
 **If you lose `master.pass`, the script will not recognize your password, and you will be unable to decrypt the database.**
+
+-----
 
 ```
 ```
