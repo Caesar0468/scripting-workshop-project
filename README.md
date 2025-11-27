@@ -13,7 +13,7 @@ Tech: openssl, base64, grep, sqlite3 (optional)
 
 -----------------------------------------------------------------
 
-
+```
 Start Program
 Checks if master.pass exists (check_master())
 |--if yes -> vault_entry()    
@@ -35,3 +35,4 @@ Checks if master.pass exists (check_master())
 |             |__ if not match -> exit
 |
 |__if no -> create_master() --> Start Program
+```
