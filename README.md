@@ -55,7 +55,7 @@ scripting-workshop-project/
 Clone the repository and set executable permissions:
 
 ```bash
-git clone [https://github.com/Caesar0468/scripting-workshop-project](https://github.com/Caesar0468/scripting-workshop-project)
+git clone https://github.com/Caesar0468/scripting-workshop-project
 cd scripting-workshop-project
 chmod +x main.sh functions.sh
 ```
